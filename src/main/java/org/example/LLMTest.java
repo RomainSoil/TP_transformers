@@ -9,9 +9,9 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
 
-public class LLMTest  {
-    static  HttpClient httpClient;
-    static  String baseUrl;
+public class LLMTest {
+    static HttpClient httpClient;
+    static String baseUrl;
     static String modelName;
     static String laMeteo = "tempere, 18°C";
 
@@ -30,31 +30,41 @@ public class LLMTest  {
         System.out.println("Hello! I'm able to use LLM models!");
 
         try {
-        baseUrl = "http://localhost:11434";
-        httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(30))
-                .build();
+            baseUrl = "http://localhost:11434";
+            httpClient = HttpClient.newBuilder()
+                    .connectTimeout(Duration.ofSeconds(30))
+                    .build();
 
-        String texteHello = "Hello everybody and especially you !";
+            String texteHello = "Hello everybody and especially you !";
 
-        // Lister les modèles disponibles
-        System.out.println("=== Available LLM models  ===");
-        String[] models = listModels();
-        for (String model : models) {
-            System.out.println("- " + model);
+            // Lister les modèles disponibles
+            System.out.println("=== Available LLM models  ===");
+            String[] models = listModels();
+            for (String model : models) {
+                System.out.println("- " + model);
+            }
+            if (models.length == 0) {
+                throw new RuntimeException("Aucun modèle Ollama disponible");
+            }
+
+        // Choix du modèle : le premier disponible
+            modelName = models[0];
+
+            System.out.println("Modèle sélectionné : " + modelName);
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-            modelName = models[2];
-        } catch (Exception e) {e.printStackTrace();}
 
 
-                //agent asks to be removed from the platform
+        //agent asks to be removed from the platform
         //doDelete();
 
     }
+
     /**
      * Méthode pour lister les modèles LLM disponibles sur la machine par l'API Ollama
      */
-    static  String[] listModels() throws Exception {
+    static String[] listModels() throws Exception {
         HttpRequest request = HttpRequest.newBuilder()
                 .uri(URI.create(baseUrl + "/api/tags"))
                 .GET()
@@ -78,9 +88,10 @@ public class LLMTest  {
 
     /**
      * Méthode pour générer une réponse simple (non chat) avec un modèle donné
+     *
      * @param model  le nom du modèle LLM à utiliser
      * @param prompt le texte d'entrée pour la génération
-     * */
+     */
     static String generateResponse(String model, String prompt) throws Exception {
         // Construction du JSON avec org.json
         JSONObject jsonRequest = new JSONObject();
@@ -110,11 +121,12 @@ public class LLMTest  {
 
     /**
      * Méthode pour un chat avec historique
+     *
      * @param model            le nom du modèle LLM à utiliser
      * @param systemPrompt     le prompt système (instructions pour le modèle)
      * @param userMessage      le message utilisateur actuel
      * @param previousMessages un tableau de messages précédents (alternance personne/assistant)
-     * */
+     */
     static String chatWithHistory(String model, String systemPrompt,
                                   String userMessage, String[] previousMessages) throws Exception {
 
@@ -184,6 +196,7 @@ public class LLMTest  {
 
     /**
      * * Méthode pour un chat simple sans historique
+     *
      * @param model        le nom du modèle LLM à utiliser
      * @param systemPrompt le prompt système (instructions pour le modèle)
      * @param userMessage  le message utilisateur actuel
@@ -193,39 +206,75 @@ public class LLMTest  {
     }
 
 
-    static void sample2()
-    {
+    static void sample2() {
         try {
-            // Test chat avec historique
             System.out.println("\n=== Test chat avec historique ===");
             System.out.println("(patientez quelques secondes si le modèle est volumineux)");
+
+            // Ville + météo réelle (via OpenWeatherMap)
+            String ville = "Valenciennes";
+            LLMTest app = new LLMTest();
+            String meteo = app.demanderMeteo(ville);
+
+            // Historique “préférences utilisateur” + échanges cuisine/météo
             String[] history = {
-                    //TODO: intégrer un  historique d'échanges relatifs à la météo et la cuisine
+                    "Je n'aime pas les choux. Que proposes-tu quand il fait 10°C ?",
+                    "Je peux proposer une soupe de patates douces ou un velouté de courge, avec du pain complet.",
+                    "J'évite le porc et je préfère des repas assez légers.",
+                    "D'accord, je proposerai des plats sans porc, plutôt légers (poisson, poulet, légumes, légumineuses).",
+                    "J'aime bien les plats épicés mais pas trop, et je n'aime pas le sucré-salé.",
+                    "Compris : épices modérées, pas de sucré-salé. Je peux utiliser curry doux, paprika, herbes."
             };
-            System.out.println("Historique forcée :");
-            for(int i=0; i<history.length; i+=2)
-                System.out.println("User: %s  --> Assistant: %s".formatted(history[i], history[i+1]));
+
+            System.out.println("Historique forcé :");
+            for (int i = 0; i < history.length; i += 2) {
+                System.out.println("User: %s  --> Assistant: %s".formatted(history[i], history[i + 1]));
+            }
+
             System.out.println("?".repeat(20));
-            String historyResponse = chatWithHistory(modelName,
-                    "Tu es un assistant sympathique",
-                    "Comment cuisiner le repas ?",
-                    history);
-            System.out.println( historyResponse);
+
+            // Question finale (avec contexte météo)
+            String userMessage = """
+                    La météo actuelle à %s est : %s.
+                    Propose un menu complet (entrée, plat, dessert) adapté à la météo.
+                    Respecte mes préférences données dans l'historique.
+                    Donne aussi une alternative végétarienne pour le plat.
+                    Réponds en français, clair et court.
+                    """.formatted(ville, meteo);
+
+            String historyResponse = chatWithHistory(
+                    modelName,
+                    "Tu es un assistant sympathique et un chef cuisinier. Tu proposes des menus adaptés à la météo et aux préférences.",
+                    userMessage,
+                    history
+            );
+
+            System.out.println(historyResponse);
             System.out.println("~".repeat(50));
+
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        catch (Exception e) {e.printStackTrace();}
     }
 
 
     private String demanderMeteo(String ville) {
-        //TODO: demander la météo à l'API meteo
-        laMeteo = "ensoleillé, 25°C";
-        return laMeteo;
+        Meteo meteoService = new Meteo();
+        Meteo.WeatherData weather = meteoService.getWeatherByCity(ville);
+
+        if (weather == null || !weather.isValid()) {
+            return "météo inconnue";
+        }
+
+        // Exemple : "ensoleillé, 25°C"
+        return weather.getDescription() + ", " +
+                String.format("%.1f", weather.getTemperature()) + "°C";
     }
+
 
     /**
      * * Exemple d'utilisation des différentes méthodes
-     * */
+     */
     static void sample1() {
         System.out.println("~".repeat(50));
         // Test génération simple
@@ -250,8 +299,9 @@ public class LLMTest  {
 
             System.out.println("~".repeat(50));
 
+        } catch (Exception e) {
+            e.printStackTrace();
         }
-        catch (Exception e) {e.printStackTrace();}
     }
 
 }
