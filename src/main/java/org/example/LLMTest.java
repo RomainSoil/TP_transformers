@@ -1,6 +1,5 @@
-package ollama;
+package org.example;
 
-import ollama.gui.GuiOllamaAgent;
 import org.json.JSONArray;
 import org.json.JSONObject;
 

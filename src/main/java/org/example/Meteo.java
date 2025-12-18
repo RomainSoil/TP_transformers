@@ -1,4 +1,4 @@
-package ollama;
+package org.example;
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
@@ -8,8 +8,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import org.json.JSONArray;
 import org.json.JSONObject;
+import org.json.JSONArray;
 
 /**
  * Service météo utilisant l'API OpenWeatherMap
@@ -20,7 +20,7 @@ import org.json.JSONObject;
  */
 public class Meteo {
 
-    private static final String API_KEY = "123456789123456789";// Remplacez par votre clé API
+    private static final String API_KEY = "91bd4d80344f4dc6cd5810f2a2c2b619";
     private static final String BASE_URL = "http://api.openweathermap.org/data/2.5/weather";
     private static final Logger logger = Logger.getLogger(Meteo.class.getName());
 
