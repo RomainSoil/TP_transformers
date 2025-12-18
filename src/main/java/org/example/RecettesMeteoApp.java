@@ -37,10 +37,6 @@ public class RecettesMeteoApp {
                 "je n'aime pas les choux que proposez vous par 10°",
                 "je propose une soupe de patates douces",
                 "je n'aime pas les champignons",
-                "je n'aime pas les oignons",
-                "je n'aime pas les plats épicés",
-                "je suis végétarien",
-                "je n'aime pas les desserts avec du chocolat"
         };
 
         // prompt
@@ -57,7 +53,10 @@ public class RecettesMeteoApp {
         String userMessage = buildUserMessage(saison, wd);
 
         // LLM
-        String model = "gpt-oss:120b-cloud";
+//        String model = "gpt-oss:120b-cloud";
+//        String model = "tinyllama";
+        String model = "Phi4-mini";
+
 
         // LLM avec historique
         String reponse = LLMTest.chatWithHistory(model, systemPrompt, userMessage, history);
