@@ -1,5 +1,10 @@
 package org.example;
 
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+
 public class LLMClient {
 
     private final String model;
@@ -12,7 +17,7 @@ public class LLMClient {
 
         String json = String.format(
                 "{\"model\":\"%s\",\"prompt\":\"%s\",\"temperature\":%.2f}",
-                model, prompt.replace(""", "\\""), temperature
+                model, prompt.replace("", "\\"), temperature
         );
 
         HttpRequest request = HttpRequest.newBuilder()
